@@ -1,7 +1,7 @@
 import type { FC } from 'react'
 import type { TemplateProps } from '../src/renderer/template'
 
-export const ModernTemplate: FC<TemplateProps> = ({ data }) => {
+export default function Template({ data }: TemplateProps) {
   const { frontmatter, sections } = data
 
   const contactItems = [
