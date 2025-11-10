@@ -1,16 +1,20 @@
 # Resume Generator
 
-A modern resume generator that converts Markdown files into beautifully formatted PDFs using React templates and Playwright.
+A modern, template-based resume generator built with Bun, React, and TypeScript. Write your resume in Markdown and generate beautiful PDFs using customizable React templates.
 
 ## Features
 
-- **Markdown-based**: Write your resume in simple Markdown format
-- **Frontmatter support**: Add metadata using YAML frontmatter
-- **React templates**: Create custom, reusable resume templates with React/TSX
-- **PDF output**: Generate professional PDFs using Playwright
-- **Fast**: Built with Bun for blazing-fast performance
-- **TypeScript**: Fully typed for better developer experience
-- **Tailwind CSS**: Style your templates with Tailwind v4
+- **Markdown-based content**: Write your resume in simple Markdown with frontmatter for metadata
+- **React templates**: Design custom resume layouts using React components with TypeScript
+- **Multiple templates**: Generate multiple versions of your resume using different templates
+- **PDF output**: Automatically generate print-ready PDFs using Playwright
+- **Tailwind CSS**: Style your templates with Tailwind CSS
+- **Fast builds**: Powered by Bun for instant bundling and execution
+- **Watch mode**: Automatically regenerate resumes when files change
+
+## Prerequisites
+
+- [Bun](https://bun.sh) (v1.0+)
 
 ## Installation
 
@@ -18,195 +22,143 @@ A modern resume generator that converts Markdown files into beautifully formatte
 bun install
 ```
 
-## Quick Start
+## Usage
 
-1. Create a markdown file with your resume content:
+### Quick Start
+
+1. Create or edit your resume in `resumes/resume.md`:
 
 ```markdown
 ---
 name: John Doe
+title: Software Engineer
 email: john@example.com
 phone: (555) 123-4567
 location: San Francisco, CA
 ---
 
-# Experience
+## Experience
 
-## Senior Software Engineer @ Tech Company
+### Senior Developer | Company Name
+*2020 - Present*
 
-_Jan 2020 - Present_
+- Built scalable web applications
+- Led team of 5 developers
 
-- Led development of key features
-- Mentored junior developers
-- Improved system performance by 50%
+## Skills
 
-# Education
-
-## Bachelor of Science in Computer Science
-
-_University Name, 2016_
+JavaScript, TypeScript, React, Node.js
 ```
 
-2. Create or use an existing template (see `examples/ModernTemplate.tsx`)
-
-3. Generate your PDF:
-
-```typescript
-import { parseFrontmatter, parseSections } from './src/parser'
-import { renderTemplate } from './src/renderer/template'
-import { render } from './src/renderer/render'
-import { ModernTemplate } from './examples/ModernTemplate'
-
-const markdownContent = await Bun.file('./resume.md').text()
-const { data: frontmatter, content } = parseFrontmatter(markdownContent)
-const sections = await parseSections(content)
-
-const html = await renderTemplate({ frontmatter, sections }, ModernTemplate)
-const pdf = await render(html, {
-  margin: {
-    top: '3mm',
-    right: '10mm',
-    bottom: '10mm',
-    left: '10mm',
-  },
-})
-
-await Bun.write('./resume.pdf', pdf)
-```
-
-## Usage
-
-Run the example:
+2. Generate your resume:
 
 ```bash
-bun examples/usage.ts
+bun start
 ```
 
-This will:
+Your PDF will be generated in `output/resume/vercel-template.pdf`
 
-1. Parse the markdown file (`examples/resume.md`)
-2. Extract frontmatter and sections
-3. Render using the Modern Template
-4. Generate a PDF (`examples/resume.pdf`)
+### Development Mode
 
-## Project Structure
+Watch for changes and regenerate automatically:
+
+```bash
+bun dev
+```
+
+### Project Structure
 
 ```
-.
+res/
+├── resumes/              # Your resume markdown files
+│   └── resume.md
+├── templates/            # React template components
+│   └── vercel-template.tsx
+├── output/               # Generated PDFs (created automatically)
 ├── src/
-│   ├── parser/
-│   │   ├── frontmatter.ts    # YAML frontmatter parser
-│   │   ├── markdown.ts       # Markdown to HTML converter
-│   │   ├── sections.ts       # Section extractor
-│   │   └── index.ts          # Parser exports
-│   ├── renderer/
-│   │   ├── template.tsx      # Template renderer
-│   │   └── render.ts         # PDF renderer using Playwright
-│   └── types.ts              # TypeScript type definitions
-├── examples/
-│   ├── resume.md             # Example resume in Markdown
-│   ├── ModernTemplate.tsx    # Example React template
-│   ├── usage.ts              # Usage example
-│   └── resume.pdf            # Generated PDF output
+│   ├── parser/           # Markdown parsing logic
+│   ├── renderer/         # Template rendering and PDF generation
+│   ├── scripts/          # Build and watch scripts
+│   └── types.ts          # TypeScript type definitions
 └── package.json
 ```
 
 ## Creating Custom Templates
 
-Templates are React components that receive `ResumeData` as props:
-
-```typescript
-interface ResumeData {
-  frontmatter: {
-    [key: string]: any
-  }
-  sections: Array<{
-    title: string
-    content: string // HTML content
-  }>
-}
-```
-
-Example template:
+Create a new template in `templates/` directory:
 
 ```tsx
-export function MyTemplate({ frontmatter, sections }: ResumeData) {
-  return (
-    <html>
-      <head>
-        <title>{frontmatter.name}'s Resume</title>
-      </head>
-      <body>
-        <h1>{frontmatter.name}</h1>
-        <p>{frontmatter.email}</p>
+// templates/my-template.tsx
+import React from 'react'
+import type { ResumeData } from '../src/types'
 
-        {sections.map((section, i) => (
-          <div key={i}>
-            <h2>{section.title}</h2>
-            <div dangerouslySetInnerHTML={{ __html: section.content }} />
-          </div>
-        ))}
-      </body>
-    </html>
+export default function MyTemplate({ frontmatter, sections }: ResumeData) {
+  return (
+    <div className="p-8">
+      <h1 className="text-4xl font-bold">{frontmatter.name}</h1>
+      <p className="text-xl">{frontmatter.title}</p>
+
+      {sections.map((section, i) => (
+        <div key={i}>
+          <h2 className="text-2xl font-semibold mt-6">{section.title}</h2>
+          <div dangerouslySetInnerHTML={{ __html: section.html }} />
+        </div>
+      ))}
+    </div>
   )
 }
 ```
 
-## API
+The generator will automatically pick up your new template and generate a PDF.
 
-### Parser
+## Resume Format
 
-```typescript
-import { parseFrontmatter, parseSections } from './src/parser'
+Resumes use Markdown with YAML frontmatter:
 
-// Parse YAML frontmatter
-const { data, content } = parseFrontmatter(markdownString)
+```markdown
+---
+name: Your Name
+title: Your Title
+email: your@email.com
+phone: (555) 555-5555
+location: Your Location
+website: https://yoursite.com
+linkedin: https://linkedin.com/in/yourprofile
+github: https://github.com/yourusername
+---
 
-// Parse sections from markdown
-const sections = await parseSections(markdownContent)
+## Section Title
+
+Your content here using standard Markdown syntax.
+
+### Subsection
+
+- Bullet points
+- More bullets
+
+**Bold text** and *italic text*
 ```
 
-### Renderer
+## Scripts
 
-```typescript
-import { renderTemplate } from './src/renderer/template'
-import { render } from './src/renderer/render'
+- `bun start` - Generate all resumes with all templates
+- `bun dev` - Watch mode: regenerate on file changes
 
-// Render React template to HTML
-const html = await renderTemplate(resumeData, TemplateComponent)
+## Technologies
 
-// Convert HTML to PDF
-const pdf = await render(html, {
-  margin: {
-    top: '10mm',
-    right: '10mm',
-    bottom: '10mm',
-    left: '10mm',
-  },
-})
-```
+- **Runtime**: [Bun](https://bun.sh)
+- **UI**: [React 19](https://react.dev)
+- **Styling**: [Tailwind CSS 4](https://tailwindcss.com)
+- **PDF Generation**: [Playwright](https://playwright.dev)
+- **Markdown**: [unified](https://unifiedjs.com) + [remark](https://remark.js.org) + [rehype](https://rehype.js.org)
+- **Frontmatter**: [gray-matter](https://github.com/jonschlinkert/gray-matter)
 
-## Dependencies
+## How It Works
 
-- **Bun**: Fast JavaScript runtime and bundler
-- **React 19**: Template rendering
-- **Playwright**: PDF generation
-- **Tailwind CSS v4**: Styling
-- **unified/remark/rehype**: Markdown processing
-- **gray-matter**: YAML frontmatter parsing
-
-## Development
-
-```bash
-# Install dependencies
-bun install
-
-# Run example
-bun examples/usage.ts
-
-# Type checking
-bun run tsc --noEmit
-```
+1. **Parse**: Markdown files are parsed using `gray-matter` for frontmatter and `unified`/`remark` for content
+2. **Transform**: Content is converted from Markdown to HTML using `remark-rehype`
+3. **Render**: React templates receive parsed data and generate HTML
+4. **Generate**: Playwright renders the HTML and generates PDFs
 
 ## License
 
